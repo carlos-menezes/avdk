@@ -1,0 +1,49 @@
+{
+    "name": "avdk",
+    "version": "1.0.0",
+    "description": "Opinionated alternative to `altv-pkg` which allows a developer to scaffold a project with ease.",
+    "main": "bin/index.js",
+    "scripts": {
+        "compile": "tsc",
+        "clean": "rimraf bin",
+        "build": "npm run clean && npm run compile",
+        "watch": "tsc -w"
+    },
+    "keywords": [
+        "altv",
+        "gta5",
+        "gta online server"
+    ],
+    "author": "Carlos Menezes <carlos.dm.menezes+npm@gmail.com>",
+    "license": "ISC",
+    "devDependencies": {
+        "@swc/cli": "^0.3.9",
+        "@swc/core": "^1.4.0",
+        "@types/node": "^20.11.17",
+        "@types/npm": "^7.19.3",
+        "minimist": "^1.2.8",
+        "npm": "^10.4.0",
+        "prettier": "^3.2.5",
+        "rimraf": "^5.0.5",
+        "typescript": "^5.3.3"
+    },
+    "dependencies": {
+        "@types/minimist": "^1.2.5",
+        "axios": "^1.6.7",
+        "commander": "^12.0.0",
+        "glob": "^10.3.10",
+        "picocolors": "^1.0.0",
+        "yup": "^1.3.3"
+    },
+    "bin": {
+        "avdk": "./bin/index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/carlos-menezes/avdk"
+    },
+    "files": [
+        "bin",
+        "template"
+    ]
+}
