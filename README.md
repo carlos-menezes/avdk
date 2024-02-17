@@ -6,7 +6,8 @@ Opinionated alternative to `altv-pkg` (see [repository](https://github.com/altmp
 
 ## Installation
 
-`npm i -g avdk`
+1. Via `npm`: `npm i -g avdk`
+2. Via `npx`: `npx avdk [command]`
 
 ## Getting Started
 
