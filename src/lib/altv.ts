@@ -1,5 +1,7 @@
+import axios from 'axios'
 import { Configuration } from './configuration'
 import os from 'os'
+import { safeJsonParse } from '../util/object'
 
 type NativePlatform = 'win32' | 'linux' | 'darwin'
 type AltVPlatform = 'x64_win32' | 'x64_linux'
@@ -8,80 +10,105 @@ type AltVFile = {
     url: string
 }
 
+type UpdateJson = {
+    latestBuildNumber: number
+    version: string
+    sdkVersion: string
+    hashList: Record<string, string>
+    sizeList: Record<string, string>
+}
+
 const altVPlatformName: Record<NativePlatform, AltVPlatform> = {
     win32: 'x64_win32',
     linux: 'x64_linux',
     darwin: 'x64_linux',
 }
 
-const getBaseFiles = (
+const getServerFiles = async (
     platform: AltVPlatform,
-    {
-        branch,
-        loadBytecodeModule,
-    }: Pick<Configuration, 'branch' | 'loadBytecodeModule'>
-): AltVFile[] =>
-    [
-        {
-            dest: '',
-            url: `https://cdn.alt-mp.com/server/${branch}/${platform}/altv-crash-handler${platform === 'x64_win32' ? '.exe' : ''}`,
-        },
-        {
-            dest: '',
-            url: `https://cdn.alt-mp.com/server/${branch}/${platform}/altv-server${platform === 'x64_win32' ? '.exe' : ''}`,
-        },
-        {
-            dest: 'modules/js-module/',
-            url: `https://cdn.alt-mp.com/js-module/${branch}/${platform}/modules/js-module/${platform == 'x64_linux' ? 'lib' : ''}js-module.${platform === 'x64_win32' ? 'dll' : 'so'}`,
-        },
-        {
-            dest: 'modules/js-module/',
-            url: `https://cdn.alt-mp.com/js-module/${branch}/${platform}/modules/js-module/libnode.${platform === 'x64_win32' ? 'dll' : 'so.108'}`,
-        },
-        loadBytecodeModule
-            ? {
-                  dest: 'modules/',
-                  url: `https://cdn.alt-mp.com/js-bytecode-module/${branch}/${platform}/modules/${platform == 'x64_linux' ? 'lib' : ''}js-bytecode-module.${platform === 'x64_win32' ? 'dll' : 'so'}`,
-              }
-            : null,
-    ].filter(Boolean) as AltVFile[]
+    { branch }: Pick<Configuration, 'branch'>
+): Promise<AltVFile[]> => {
+    const updateJson = await axios.get(
+        `https://cdn.alt-mp.com/server/${branch}/${platform}/update.json`
+    )
 
-const getDataFiles = (branch: Configuration['branch']): AltVFile[] => [
-    {
-        dest: 'data',
-        url: `https://cdn.alt-mp.com/data/${branch}/data/clothes.bin`,
-    },
-    {
-        dest: 'data',
-        url: `https://cdn.alt-mp.com/data/${branch}/data/pedmodels.bin`,
-    },
-    {
-        dest: 'data',
-        url: `https://cdn.alt-mp.com/data/${branch}/data/rpfdata.bin`,
-    },
-    {
-        dest: 'data',
-        url: `https://cdn.alt-mp.com/data/${branch}/data/vehmodels.bin`,
-    },
-    {
-        dest: 'data',
-        url: `https://cdn.alt-mp.com/data/${branch}/data/vehmods.bin`,
-    },
-    {
-        dest: 'data',
-        url: `https://cdn.alt-mp.com/data/${branch}/data/weaponmodels.bin`,
-    },
-]
+    if (!updateJson.data) {
+        throw new Error('Failed to fetch data update.json')
+    }
 
-const getAltVFiles = (configuration: Readonly<Configuration>): AltVFile[] => {
+    const { hashList } = updateJson.data as UpdateJson
+    const fileNames = Object.keys(hashList)
+
+    return fileNames.map((fileName) => ({
+        dest: '',
+        url: `https://cdn.alt-mp.com/server/${branch}/${platform}/${fileName}`,
+    }))
+}
+
+const getDataFiles = async (
+    branch: Configuration['branch']
+): Promise<AltVFile[]> => {
+    const updateJson = await axios.get(
+        `https://cdn.alt-mp.com/data/${branch}/update.json`
+    )
+
+    if (!updateJson.data) {
+        throw new Error('Failed to fetch data update.json')
+    }
+
+    const { hashList } = updateJson.data as UpdateJson
+    const fileNames = Object.keys(hashList)
+
+    return fileNames.map(
+        (fileName) =>
+            ({
+                dest: 'data',
+                url: `https://cdn.alt-mp.com/data/${branch}/${fileName}`,
+            }) as AltVFile
+    )
+}
+
+const getJsBytecodeModule = async (
+    platform: AltVPlatform,
+    { branch }: Pick<Configuration, 'branch'>
+) => {
+    const updateJson = await axios.get(
+        `https://cdn.alt-mp.com/js-bytecode-module/${branch}/${platform}/update.json`
+    )
+
+    if (!updateJson.data) {
+        throw new Error('Failed to fetch data update.json')
+    }
+
+    const { hashList } = updateJson.data as UpdateJson
+    const fileNames = Object.keys(hashList)
+    return fileNames.map((fileName) => ({
+        dest: fileName,
+        url: `https://cdn.alt-mp.com/js-bytecode-module/${branch}/${platform}/${fileName}`,
+    }))
+}
+
+const getAltVFiles = async (
+    configuration: Readonly<Configuration>
+): Promise<AltVFile[]> => {
     const system = os.platform()
     const platform = altVPlatformName[system as NativePlatform]
     const { branch, loadBytecodeModule } = configuration
 
-    const baseFiles = getBaseFiles(platform, { branch, loadBytecodeModule })
-    const dataFiles = getDataFiles(branch)
+    const serverFiles = await getServerFiles(platform, {
+        branch,
+    })
+    const dataFiles = await getDataFiles(branch)
 
-    return [...baseFiles, ...dataFiles]
+    if (loadBytecodeModule) {
+        const jsBytecodeModule = await getJsBytecodeModule(platform, {
+            branch,
+        })
+
+        return [...serverFiles, ...dataFiles, ...jsBytecodeModule]
+    }
+
+    return [...serverFiles, ...dataFiles]
 }
 
 export { getAltVFiles }

@@ -14,7 +14,7 @@ export default async () => {
     }
 
     const currentDirectory = process.cwd()
-    const files = getAltVFiles(avdkJson)
+    const files = await getAltVFiles(avdkJson)
 
     const directoryPaths = [...new Set(files.map((file) => file.dest))]
     directoryPaths.map(async (name) => {
