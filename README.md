@@ -22,7 +22,7 @@ You can then start the server with `npm run {windows, linux}` depending on your 
 
 ## Commands
 
-### `avdk init`
+### `avdk init [resource-name]`
 
 Scaffolds a new project in the current directory.
 
