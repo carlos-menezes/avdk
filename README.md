@@ -30,6 +30,7 @@ Scaffolds a new project in the current directory.
 
 -   `--{loadBytecodeModule,bc}`: whether to load the Bytecode module or not (default: `true`).
 -   `--{branch,b}`: the branch to use for the server binaries (default: `release`).
+-   `--{voice,v}`: whether to load the Voice module or not (default: `false`).
 
 ### Example
 

@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { Configuration } from './configuration'
 import os from 'os'
-import { safeJsonParse } from '../util/object'
 
 type NativePlatform = 'win32' | 'linux' | 'darwin'
 type AltVPlatform = 'x64_win32' | 'x64_linux'
@@ -58,7 +57,6 @@ const getDataFiles = async (
 
     const { hashList } = updateJson.data as UpdateJson
     const fileNames = Object.keys(hashList)
-
     return fileNames.map(
         (fileName) =>
             ({
@@ -88,27 +86,57 @@ const getJsBytecodeModule = async (
     }))
 }
 
+const getVoiceModule = async (
+    platform: AltVPlatform,
+    { branch }: Pick<Configuration, 'branch'>
+) => {
+    const updateJson = await axios.get(
+        `https://cdn.alt-mp.com/voice-server/${branch}/${platform}/update.json`
+    )
+
+    if (!updateJson.data) {
+        throw new Error('Failed to fetch data update.json')
+    }
+
+    const { hashList } = updateJson.data as UpdateJson
+    const fileNames = Object.keys(hashList)
+    return fileNames.map((fileName) => ({
+        dest: '',
+        url: `https://cdn.alt-mp.com/voice-server/${branch}/${platform}/${fileName}`,
+    }))
+}
+
 const getAltVFiles = async (
     configuration: Readonly<Configuration>
 ): Promise<AltVFile[]> => {
     const system = os.platform()
     const platform = altVPlatformName[system as NativePlatform]
-    const { branch, loadBytecodeModule } = configuration
+    const { branch, loadBytecodeModule, voice } = configuration
 
     const serverFiles = await getServerFiles(platform, {
         branch,
     })
     const dataFiles = await getDataFiles(branch)
 
+    const files = [...serverFiles, ...dataFiles]
+
     if (loadBytecodeModule) {
         const jsBytecodeModule = await getJsBytecodeModule(platform, {
             branch,
         })
 
-        return [...serverFiles, ...dataFiles, ...jsBytecodeModule]
+        files.push(...jsBytecodeModule)
     }
 
-    return [...serverFiles, ...dataFiles]
+    if (voice) {
+        const voiceModule = await getVoiceModule(platform, {
+            branch,
+        })
+
+        files.push(...voiceModule)
+    }
+
+    return files
 }
 
 export { getAltVFiles }

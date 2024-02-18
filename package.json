@@ -1,6 +1,6 @@
 {
     "name": "avdk",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Opinionated alternative to `altv-pkg` which allows a developer to scaffold a project with ease.",
     "main": "./bin/index.js",
     "scripts": {
