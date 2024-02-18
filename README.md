@@ -15,10 +15,10 @@ Opinionated alternative to `altv-pkg` (see [repository](https://github.com/altmp
 2. Change into the new directory: `cd my-new-project`;
 3. Run `avdk init` to scaffold the project;
 4. Run `npm install` to install the dependencies;
-5. Ensure binaries and data files with `avdk ensure`;
-6. Build the project with `npm run build`.
+5. Build the project with `npm run build`.
+6. Ensure binaries and data files with `avdk ensure`;
 
-You can then start the server with `npm run {windows, linux}` depending on your operating system.
+You can then start the server with `npm run start:{windows, linux}` depending on your operating system.
 
 ## Commands
 
@@ -28,15 +28,15 @@ Scaffolds a new project in the current directory.
 
 #### Options
 
--   `--{loadBytecodeModule,bc}`: whether to load the Bytecode module or not (default: `true`).
 -   `--{branch,b}`: the branch to use for the server binaries (default: `release`).
 -   `--{voice,v}`: whether to load the Voice module or not (default: `false`).
 
 ### Example
 
 ```sh
-avdk init # scaffolds a new project with the Bytecode module and using the release branch for the server binaries
-avdk init --loadBytecodeModule=false --branch=dev # scaffolds a new project without the Bytecode module and using the dev branch for the server binaries
+avdk init # scaffolds a new project using the release branch for the server binaries
+avdk init --branch=dev # scaffolds a new project using the dev branch for the server binaries
+avdk init --branch=dev --voice # scaffolds a new project using the dev branch for the server binaries and with the voice module
 ```
 
 ### `avdk ensure`

@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { Configuration } from './configuration'
-import os from 'os'
 
 type NativePlatform = 'win32' | 'linux' | 'darwin'
 type AltVPlatform = 'x64_win32' | 'x64_linux'
@@ -66,26 +65,6 @@ const getDataFiles = async (
     )
 }
 
-const getJsBytecodeModule = async (
-    platform: AltVPlatform,
-    { branch }: Pick<Configuration, 'branch'>
-) => {
-    const updateJson = await axios.get(
-        `https://cdn.alt-mp.com/js-bytecode-module/${branch}/${platform}/update.json`
-    )
-
-    if (!updateJson.data) {
-        throw new Error('Failed to fetch data update.json')
-    }
-
-    const { hashList } = updateJson.data as UpdateJson
-    const fileNames = Object.keys(hashList)
-    return fileNames.map((fileName) => ({
-        dest: fileName,
-        url: `https://cdn.alt-mp.com/js-bytecode-module/${branch}/${platform}/${fileName}`,
-    }))
-}
-
 const getVoiceModule = async (
     platform: AltVPlatform,
     { branch }: Pick<Configuration, 'branch'>
@@ -106,27 +85,48 @@ const getVoiceModule = async (
     }))
 }
 
+const getJSModule = async (
+    platform: AltVPlatform,
+    { branch }: Pick<Configuration, 'branch'>
+) => {
+    const updateJson = await axios.get(
+        `https://cdn.alt-mp.com/js-module/${branch}/${platform}/update.json`
+    )
+
+    if (!updateJson.data) {
+        throw new Error('Failed to fetch data update.json')
+    }
+
+    const { hashList } = updateJson.data as UpdateJson
+    const fileNames = Object.keys(hashList)
+
+    const intoModulesFolder = ['modules/js-module/libjs-module.so']
+
+    return fileNames.map((fileName) => ({
+        dest: intoModulesFolder.includes(fileName) ? 'modules' : '',
+        url: `https://cdn.alt-mp.com/js-module/${branch}/${platform}/${fileName}`,
+    }))
+}
+
+const getAltVPlatform = (platform: NodeJS.Platform): AltVPlatform => {
+    const platformName = platform as NativePlatform
+    return altVPlatformName[platformName]
+}
+
 const getAltVFiles = async (
+    platform: AltVPlatform,
     configuration: Readonly<Configuration>
 ): Promise<AltVFile[]> => {
-    const system = os.platform()
-    const platform = altVPlatformName[system as NativePlatform]
-    const { branch, loadBytecodeModule, voice } = configuration
+    const { branch, voice } = configuration
 
     const serverFiles = await getServerFiles(platform, {
         branch,
     })
     const dataFiles = await getDataFiles(branch)
-
-    const files = [...serverFiles, ...dataFiles]
-
-    if (loadBytecodeModule) {
-        const jsBytecodeModule = await getJsBytecodeModule(platform, {
-            branch,
-        })
-
-        files.push(...jsBytecodeModule)
-    }
+    const jsModule = await getJSModule(platform, {
+        branch,
+    })
+    const files = [...serverFiles, ...dataFiles, ...jsModule]
 
     if (voice) {
         const voiceModule = await getVoiceModule(platform, {
@@ -139,4 +139,4 @@ const getAltVFiles = async (
     return files
 }
 
-export { getAltVFiles }
+export { getAltVFiles, getAltVPlatform }

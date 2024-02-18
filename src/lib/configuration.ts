@@ -3,7 +3,6 @@ import type { InferType } from 'yup'
 
 const configurationSchema = object({
     branch: string().oneOf(['dev', 'rc', 'release']).default('release'),
-    loadBytecodeModule: boolean().default(true),
     voice: boolean().default(false),
 })
 type Configuration = InferType<typeof configurationSchema>

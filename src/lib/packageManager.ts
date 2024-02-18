@@ -21,7 +21,7 @@ type Script =
 
 const scripts: Record<Script, string> = {
     clean: `rimraf ./${OUTPUT_DIRECTORY}`,
-    compile: `swc ./src -d ./${OUTPUT_DIRECTORY} --copy-files --strip-leading-paths`,
+    compile: `swc ./src -d ./${OUTPUT_DIRECTORY}/resources --copy-files --strip-leading-paths`,
     copy: `cpy './configuration/**/*' ./${OUTPUT_DIRECTORY} `,
     build: 'npm run clean && npm run compile && npm run copy',
     'start:windows': `npm run build && ./${OUTPUT_DIRECTORY}/altv-server.exe`,
