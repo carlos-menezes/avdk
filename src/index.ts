@@ -9,7 +9,6 @@ import { alias, configurationTypes } from './lib/cli'
 import { removeKeys } from './util/object'
 import {
     logErrorBackground,
-    logSuccess,
     logSuccessBackground,
 } from './util/log'
 
